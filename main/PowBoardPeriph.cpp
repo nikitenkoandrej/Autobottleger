@@ -29,11 +29,9 @@ TriacUnit::TriacUnit(int TRIAC_GPIO_OUTPUT_NUM):ESP32_IO_pin(TRIAC_GPIO_OUTPUT_N
     gpio_config(&io_conf);
 }
 
-void TriacUnit::brezenghem(float current_time){
-
-    if(current_time > 1.00)
-    brezenghem_x_quant = 0;
-    float precise_x = this->state_percents_open*current_time;
+void TriacUnit::brezenghem(int current_time){    
+        
+    float precise_x = this->state_percents_open*static_cast<float>(current_time)/1000.0;
     
     float eps = 0;           
             eps = precise_x - brezenghem_x_quant;
@@ -43,6 +41,9 @@ void TriacUnit::brezenghem(float current_time){
             }else{
                 gpio_set_level(GPIO_OUTPUT_TRIAC, 0);
             } 
+    if(current_time > 995.0){        
+        brezenghem_x_quant = 0;
+    }
 }
 
  bool TriacUnit::setState(float percent_open){

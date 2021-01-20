@@ -27,15 +27,14 @@ class TriacUnit{
 
 private:
     const int ESP32_IO_pin; 
-    float state_percents_open;
-
-    void brezenghem(float current_time);
+    float state_percents_open;    
     float brezenghem_x_quant;
 
 public:
     TriacUnit(int TRIAC_GPIO_OUTPUT_NUM);
     const int getOutPin() const {return ESP32_IO_pin;}
     bool setState(float percent_open);
+    void brezenghem(int time_ms);
     
 };
 
@@ -104,11 +103,13 @@ class AlarmSensor{
 
 public:
     ThermoSensor(int THERM_SENS_INPUT, rmt_channel_id_t RMT_CH_RX, rmt_channel_id_t RMT_CH_TX);
-    float get_temperature();
+    float check_alarm();
 }
 
 
 class Periph{
+private:
+    void check_alarm();
 public:
     TriacUnit* Triac;
     Valve *Valve1,
