@@ -44,56 +44,42 @@
 #include "AutoBottlegerGPIO.h"
 #include <string.h>
 #include "PowBoardPeriph.h"
+#include "PageData.h"
+
 
 class Page{
-
 private:
+    PageState page_state;
+    uint64_t page_start_time;    
+    void update_state(PageState &new_state);       
 
-    Periph*
-    
-    struct SystemState{
-        bool main_mode;
-        std::string ssid;
-        std::string pass;
-        int wi_fi_err_code;
-        uint64_t time_s;
-        bool error;
-    } state;
+public:
+    void set_page_start_time(uint64_t time);
+    uint64_t get_page_start_time(){return page_start_time;}
+    bool (*check_condition_ptr)(PageState &current_state);
+    Page(PageState &initializer, bool (*condition_ptr)(PageState &current_state));
+    PageState& get_state() const {return page_state}; 
+};
 
-    struct PageState{
-
-        float temperature_1;
-        float temperature_2;
-        float temperature_3;
-        float temperature_4;
-
-        float temper_control_val_1;
-        float temper_control_val_2;
-        float temper_control_val_3;
-
-        int triac_percent_open;
-
-        bool valve_1_state;
-        bool valve_2_state;
-        bool valve_3_state;
-
-        uint64_t page_time;
-        int next_page_num; 
-
-        uint64_t time_s;
-        bool error;
-    } page_state;
-
-
-    bool perform_slow_loop();
-    //bool perform_fast_loop();
-    //bool (*check_ptr)();
+class PageSystem{
+private:
+    SystemState state;
+    Periph* ABPeriph_ptr;
+    std::vector<Page> Page_table;    
+    int current_page_num;
+    void perform_slow_loop(uint64_t time);
+    void perform_fast_loop();
     //bool update_state();       
 
 public:
-    bool check_condition;
-    Page();
+    bool check_condition();
+    bool check_alarm();
+    PageSystem(Periph* ABPeriph);        
+    void update_page(PageState &new_state);
+    PageState& get_state() const;  
 };
+
+
 
 
 #endif  // PB_PERIPH_H
