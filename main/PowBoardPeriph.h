@@ -1,14 +1,4 @@
-/*
- * MIT License
- *
- * 
- */
-
-/**
- * @file
- * @brief 
- */
-
+#pragma once
 #ifndef PB_PERIPH_H
 #define PB_PERIPH_H
 
@@ -29,6 +19,7 @@ private:
     const int ESP32_IO_pin; 
     float state_percents_open;    
     float brezenghem_x_quant;
+    int brezenghem_time;
 
 public:
     TriacUnit(int TRIAC_GPIO_OUTPUT_NUM);
@@ -99,12 +90,14 @@ class AlarmSensor{
     private:
     const int ESP32_IO_pin;
     bool is_triggered;
-    QueueHandle_t gpio_evt_queue;
 
 public:
-    ThermoSensor(int THERM_SENS_INPUT, rmt_channel_id_t RMT_CH_RX, rmt_channel_id_t RMT_CH_TX);
-    float check_alarm();
-}
+    static void enable_alarm_isr(){
+     gpio_install_isr_service(ESP_INTR_FLAG_LEVEL3);
+    }
+    AlarmSensor(int SENSOR_INPUT_NUM);
+    bool check_alarm();
+};
 
 
 class Periph{

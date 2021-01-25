@@ -133,7 +133,7 @@ static bool _address_device(const DS18B20_Info * ds18b20_info)
         }
         else
         {
-            ESP_LOGE(TAG, "ds18b20 device not responding");
+            //ESP_LOGE(TAG, "ds18b20 device not responding");
         }
     }
     return present;
@@ -474,7 +474,7 @@ bool ds18b20_convert(const DS18B20_Info * ds18b20_info)
         }
         else
         {
-            ESP_LOGE(TAG, "ds18b20 device not responding");
+            ;//ESP_LOGE(TAG, "ds18b20 device not responding");
         }
     }
     return result;

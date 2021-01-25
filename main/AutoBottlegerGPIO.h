@@ -1,14 +1,4 @@
-/*
- *
- *
- */
 
-/**
- * 
- *
- *
- * 
- */
 
 #ifndef AB_GPIO_H
 #define AB_GPIO_H

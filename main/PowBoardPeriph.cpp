@@ -5,7 +5,7 @@
 
 
 //****************************peripherial ISR***********************************
-
+static xQueueHandle gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
 
 static void IRAM_ATTR gpio_isr_handler(void* arg)
 {
@@ -19,6 +19,7 @@ static void IRAM_ATTR gpio_isr_handler(void* arg)
 TriacUnit::TriacUnit(int TRIAC_GPIO_OUTPUT_NUM):ESP32_IO_pin(TRIAC_GPIO_OUTPUT_NUM){
     brezenghem_x_quant = 0;
     this->state_percents_open = 0;
+    brezenghem_time = 0;
 
     gpio_config_t io_conf;
     io_conf.intr_type = GPIO_INTR_DISABLE;
@@ -29,9 +30,9 @@ TriacUnit::TriacUnit(int TRIAC_GPIO_OUTPUT_NUM):ESP32_IO_pin(TRIAC_GPIO_OUTPUT_N
     gpio_config(&io_conf);
 }
 
-void TriacUnit::brezenghem(int current_time){    
-        
-    float precise_x = this->state_percents_open*static_cast<float>(current_time)/1000.0;
+void TriacUnit::brezenghem(int time_ms){    
+    brezenghem_time += time_ms;  
+    float precise_x = this->state_percents_open*static_cast<float>(brezenghem_time)/1000.0;
     
     float eps = 0;           
             eps = precise_x - brezenghem_x_quant;
@@ -41,7 +42,8 @@ void TriacUnit::brezenghem(int current_time){
             }else{
                 gpio_set_level(GPIO_OUTPUT_TRIAC, 0);
             } 
-    if(current_time > 995.0){        
+    if(brezenghem_time > 995.0){   
+        brezenghem_time = 0;     
         brezenghem_x_quant = 0;
     }
 }
@@ -174,22 +176,22 @@ float ThermoSensor::get_temperature(){
 
 
 
-void AlarmSensor::AlarmSensor(int SENSOR_INPUT_NUM):ESP32_IO_pin(SENSOR_INPUT_NUM){
-    is_triggered = FALSE
+AlarmSensor::AlarmSensor(int SENSOR_INPUT_NUM):ESP32_IO_pin(SENSOR_INPUT_NUM){
+    is_triggered = 0;
+    gpio_config_t io_conf;
     io_conf.intr_type = GPIO_INTR_HIGH_LEVEL;
     io_conf.mode = GPIO_MODE_INPUT;
-    io_conf.pin_bit_mask = (1ULL<<ESP32_IO_PIN);
-    io_conf.pull_down_en = GPIO_PULLDOWN_ENABLE;
-    io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+    io_conf.pin_bit_mask = (1ULL<<ESP32_IO_pin);
+    io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+    io_conf.pull_up_en = GPIO_PULLUP_ENABLE;
     gpio_config(&io_conf);
-    gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
+    
     //install gpio isr service
-    gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);
-    gpio_isr_handler_add(ESP32_IO_PIN, gpio_isr_handler, (void*) ESP32_IO_PIN);
-    gpio_isr_handler_add(, gpio_isr_handler, (void*) GPIO_INPUT_SENSW);
+    gpio_isr_handler_add(static_cast<gpio_num_t>(ESP32_IO_pin), gpio_isr_handler, (void*) ESP32_IO_pin);
 }
 
 bool AlarmSensor::check_alarm(){
+    int io_num;
     if(xQueueReceive(gpio_evt_queue, &io_num, 0)){
             is_triggered = true;
     }
@@ -199,7 +201,7 @@ bool AlarmSensor::check_alarm(){
 
 Periph::Periph(){
 
-    Triac = new TriacUnit(GPIO_OUTPUT_TRIAC);
+    Triac = new TriacUnit(GPIO_OUTPUT_TRIAC);/**/
 
     Valve_pwm_settings V1_PWM_SETTINGS{MCPWM0A, MCPWM_TIMER_0, MCPWM_GEN_A};
     Valve1 = new Valve(GPIO_VALVE1_OUT, V1_PWM_SETTINGS);
@@ -219,12 +221,15 @@ Periph::Periph(){
 
     Fan = new FanUnit(GPIO_OUTPUT_FAN);
 
-    ThermoSensor1 = new ThermoSensor(GPIO_INPUT_THERMO1, RMT_CHANNEL_1, RMT_CHANNEL_0);
+    ThermoSensor1 = new ThermoSensor(GPIO_INPUT_THERMO1, RMT_CHANNEL_1, RMT_CHANNEL_0);/**/
     ThermoSensor2 = new ThermoSensor(GPIO_INPUT_THERMO2, RMT_CHANNEL_3, RMT_CHANNEL_2);
+
     ThermoSensor3 = new ThermoSensor(GPIO_INPUT_THERMO3, RMT_CHANNEL_5, RMT_CHANNEL_4);
     ThermoSensor4 = new ThermoSensor(GPIO_INPUT_THERMO4, RMT_CHANNEL_7, RMT_CHANNEL_6);
 
+    //AlarmSensor::enable_alarm_isr();
     GasSensor = new AlarmSensor(GPIO_INPUT_SENSG);
+    WaterSensor = new AlarmSensor(GPIO_INPUT_SENSW);/* */  
     
-    WaterSensor = new AlarmSensor(GPIO_INPUT_SENSW);
 }
+
