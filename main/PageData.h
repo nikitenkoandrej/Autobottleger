@@ -5,10 +5,10 @@
 
     struct SystemState{
         bool main_mode;
-        std::string ssid;
-        std::string pass;
+        uint8_t ssid[32];
+        uint8_t pass[64];
         int wi_fi_err_code;
-        uint64_t time_s;
+        int time_s;
         bool error;
     };
 
@@ -29,7 +29,7 @@
         bool valve_2_state;
         bool valve_3_state;
 
-        uint64_t page_time;
+        int page_time;
         int next_page_num; 
         int error_code;
     };

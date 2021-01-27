@@ -16,13 +16,13 @@
 class Page{
 private:
     PageState page_state;
-    uint64_t page_start_time;    
+    int page_start_time;    
           
 
 public:
     void update_state(PageState &new_state); 
-    void set_page_start_time(uint64_t time);
-    uint64_t get_page_start_time(){return page_start_time;}
+    void set_page_start_time(int time);
+    int get_page_start_time(){return page_start_time;}
     bool (*check_condition_ptr)(PageState &current_state);
     Page(PageState &initializer, bool (*condition_ptr)(PageState &current_state));
     PageState& get_state() {return page_state;}

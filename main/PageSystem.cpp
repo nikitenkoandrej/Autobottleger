@@ -44,7 +44,7 @@ void Page::update_state(PageState &new_state){
     this->page_state.error_code = new_state.error_code;
 }
 
-void Page::set_page_start_time(uint64_t time){
+void Page::set_page_start_time(int time){
     this->page_start_time = time;
 }
 
@@ -71,14 +71,15 @@ bool PageSystem::check_alarm(){
 
 void PageSystem::perform_slow_loop(uint64_t time){
 
-    this->state.time_s = time;
+    this->state.time_s = int(time/10000000);
 
     PageState p = Page_table[current_page_num].get_state();
+
     p.temperature_1 = ABPeriph_ptr->ThermoSensor1->get_temperature();
     p.temperature_2 = ABPeriph_ptr->ThermoSensor2->get_temperature();
     p.temperature_3 = ABPeriph_ptr->ThermoSensor3->get_temperature();
     p.temperature_4 = ABPeriph_ptr->ThermoSensor4->get_temperature();
-    p.page_time = time - Page_table[current_page_num].get_page_start_time();
+    p.page_time = int(time/10000000) - Page_table[current_page_num].get_page_start_time();
 
     if(this->check_alarm()){
         next_page_transfer =1;
@@ -102,10 +103,12 @@ PageSystem::PageSystem(Periph* ABPeriph):ABPeriph_ptr(ABPeriph){
     printf("Start ps init\n");
     current_page_num = 1;
     next_page_transfer = 0;
-    
-    Page_table.push_back(Page(page_1_initializers, page_1_to_2_condition));
-    Page_table.push_back(Page(page_2_initializers, page_2_to_0_condition));
     Page_table.push_back(Page(page_0_initializers, NULL));
+    Page_table.push_back(Page(page_1_initializers, page_1_to_2_condition));
+    Page_table[1].set_page_start_time(0);
+    Page_table.push_back(Page(page_2_initializers, page_2_to_0_condition));
+    
+    
     printf("End ps init\n");
 
 }
