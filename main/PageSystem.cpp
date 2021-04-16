@@ -14,34 +14,36 @@
 Page::Page(PageState &initializer, bool (*condition_ptr)(PageState &current_state)){
     check_condition_ptr = condition_ptr;
     
-    this->page_state.temper_control_val_1 = initializer.temper_control_val_1;
-    this->page_state.temper_control_val_2 = initializer.temper_control_val_2;
-    this->page_state.temper_control_val_3 = initializer.temper_control_val_3;
-    this->page_state.triac_percent_open = initializer.triac_percent_open;
-    this->page_state.valve_1_state = initializer.valve_1_state;
-    this->page_state.valve_2_state = initializer.valve_2_state;
-    this->page_state.valve_3_state = initializer.valve_3_state;
-    this->page_state.page_time = initializer.page_time;
-    this->page_state.next_page_num = initializer.next_page_num;
-    this->page_state.error_code = initializer.error_code;
+    this->page_state = initializer; 
+    this->size = PAGE_STATE_SIZE_BYTES;
 
 }
 
+int32_t Page::get_data_as_array(char* buf){
+    memcpy(&buf[0], temperature_1, sizeof(float));
+    memcpy(&buf[4], temperature_2, sizeof(float));
+    memcpy(&buf[8], temperature_3, sizeof(float));
+    memcpy(&buf[12], temperature_4, sizeof(float));
+    memcpy(&buf[16], triac_percent_open, sizeof(int));
+    memcpy(&buf[20], valve_1_state, sizeof(char));
+    memcpy(&buf[21], valve_2_state, sizeof(char));
+    memcpy(&buf[22], valve_3_state, sizeof(char));
+    memcpy(&buf[23], valve_4_state, sizeof(char));
+    memcpy(&buf[24], relay12v_state, sizeof(char));
+    memcpy(&buf[25], relay220v_state, sizeof(char));
+    memcpy(&buf[26], error_code, sizeof(char));
+    memcpy(&buf[27], temper_control_val_1, sizeof(float));
+    memcpy(&buf[31], temper_control_val_2, sizeof(float));
+    memcpy(&buf[35], temper_control_val_3, sizeof(float));
+    memcpy&(buf[39], temper_control_val_4, sizeof(float));
+    memcpy(&buf[43], &msg->next_page_num, sizeof(int));
+    memcpy(&buf[47], &msg->condition, sizeof(float));
+
+    xQueueSend(udp_msg_queue_out, msg_buf, NULL);
+}
+
 void Page::update_state(PageState &new_state){
-    this->page_state.temperature_1 = new_state.temperature_1;
-    this->page_state.temperature_2 = new_state.temperature_2;
-    this->page_state.temperature_3 = new_state.temperature_3;
-    this->page_state.temperature_4 = new_state.temperature_4;
-    this->page_state.temper_control_val_1 = new_state.temper_control_val_1;
-    this->page_state.temper_control_val_2 = new_state.temper_control_val_2;
-    this->page_state.temper_control_val_3 = new_state.temper_control_val_3;
-    this->page_state.triac_percent_open = new_state.triac_percent_open;
-    this->page_state.valve_1_state = new_state.valve_1_state;
-    this->page_state.valve_2_state = new_state.valve_2_state;
-    this->page_state.valve_3_state = new_state.valve_3_state;
-    this->page_state.page_time = new_state.page_time;
-    this->page_state.next_page_num = new_state.next_page_num;
-    this->page_state.error_code = new_state.error_code;
+    this->page_state = new_state;
 }
 
 void Page::set_page_start_time(int time){
